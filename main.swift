@@ -7,16 +7,54 @@ enum StorageError: Error {
   case invalidItemType
 }
 
+class Reporter {
+  private var storage: StorageFacility?
+
+  init() {
+    print("Reporter Instance Created.")
+    print("----------------------------------------")
+  }
+
+  func set_storage(_ storage: StorageFacility){
+    self.storage = storage
+  }
+
+  func itemExist(_ item: Any) -> Bool {
+    if let repository = self.storage?.getRepository(),
+      let itemString = item as? String {
+        return repository.contains(itemString)
+    } 
+    return false
+  }
+
+  func numberOfItem(_ item: Any) -> Int {
+    guard let repository = self.storage?.getRepository() else {
+        return 0
+    }
+
+    if let itemString = item as? String {
+        let filteredItems = repository.filter { $0 == itemString }
+        return filteredItems.count
+    } else {
+        return 0
+    }
+  }
+}
+
 class StorageFacility {
   // Create fix size array
   private var repository: [String?] = [] {
     willSet {
-      print("-> Repo Updated: \(newValue)")
+      print("Repo Updated: \(newValue)")
     }
   }
 
-  init(storage_size: Int) {
+  private var reporter: Reporter
+
+  init(storage_size: Int, reporter: Reporter) {
     repository = Array(repeating: nil, count: storage_size)
+    self.reporter = reporter
+    self.reporter.set_storage(self)
     print("StorageFacility Instance Created.")
     print("----------------------------------------")
   }
@@ -30,25 +68,9 @@ class StorageFacility {
     // add new item to repo
     repository[index] = item
   }
-  /// MARK: - todo: use composition. make it single responsible
-  /// `checkItemExist(_:)` & `numberOfItem(_:)` are different functionalities relative to facility and can be included inside one
-  func checkItemExist(_ item: String) -> Bool {
-    /// alternative: `contains(_:)`
-    if let _ = repository.firstIndex(where: { $0 == item}) {
-      return true
-    } 
-    return false
-  }
 
-  func numberOfItem(_ item: String) -> Int {
-    /// exercise: utilize `filter(_:)` method
-    var counter: Int = 0 
-    for storedItem in repository {
-      if storedItem == item {
-        counter += 1
-      }
-    }
-    return counter
+  func getRepository() -> [String?] {
+    return self.repository
   }
 }
 
@@ -75,47 +97,27 @@ class QualityAssuranceDept {
 class StorageManager {
     private let qa: QualityAssuranceDept = QualityAssuranceDept()
     private var facility: StorageFacility
+    let reporter: Reporter = Reporter()
 
     init(storage_size: Int) {
-      facility = StorageFacility(storage_size: storage_size)
+      facility = StorageFacility(storage_size: storage_size, reporter: reporter)
       print("Storage Manager Instance Created.")
       print("----------------------------------------")
     }
 
-    func store(_ item: Any?) throws {
-      do {
-        // check item is empty
-        var itemIsString: Bool = true
-        try qa.evaluate(item) {
-          itemIsString = $0
+  func store(_ item: Any?) throws {
+    do {
+        // Check if item is a string
+        guard let itemString = item as? String else {
+            throw StorageError.invalidItemType
         }
-        /// better practice: `if let _ = item as? String { ... } 
-        if itemIsString {
-          // store new item in facility
-          try facility.store(item as! String)
-        } else {
-          throw StorageError.invalidItemType
-        }
-      } catch {
-          throw error
-      }
+
+        // Store the item in the facility
+        try facility.store(itemString)
+    } catch {
+        throw error
     }
-    // MARK: - todo: update the code below based on changes
-    func checkItemExist(_ item: Any?) throws -> Bool {
-      if item is String {
-        return facility.checkItemExist(item as! String)
-      } else {
-        throw StorageError.invalidItemType
-      }
-    }
-    // MARK: - todo: update the code below based on changes
-    func getItemCount(_ item: Any?) throws -> Int {
-      if item is String {
-        return facility.numberOfItem(item as! String)
-      } else {
-        throw StorageError.invalidItemType
-      }
-    }
+  }
 }
 
 
@@ -126,23 +128,8 @@ for item in items {
   try? sm.store(item)
 }
 
-do {
-  let isExist = try sm.checkItemExist("Apple")
-  let counts = try sm.getItemCount("Apple")
-  print("Check Apple Exist: ", isExist)
-  print("Get Apple Count: ", counts)
+let isExist = sm.reporter.itemExist("Apple")
+let counts =  sm.reporter.numberOfItem("Apple")
+print("Check Apple Exist: ", isExist)
+print("Get Apple Counts: ", counts)
   
-  try sm.getItemCount(10)
-} catch {
-  print("Error: \(error)")
-}
-
-// do {
-//   try sm.store("item 1")
-//   try sm.store("item 2")
-//   try sm.store("item 3")
-//   try sm.store(10)
-// } catch {
-//   print("----------------------------------------")
-//   print("Error: \(error)")
-// }
