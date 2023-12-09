@@ -30,8 +30,10 @@ class StorageFacility {
     // add new item to repo
     repository[index] = item
   }
-
+  /// MARK: - todo: use composition. make it single responsible
+  /// `checkItemExist(_:)` & `numberOfItem(_:)` are different functionalities relative to facility and can be included inside one
   func checkItemExist(_ item: String) -> Bool {
+    /// alternative: `contains(_:)`
     if let _ = repository.firstIndex(where: { $0 == item}) {
       return true
     } 
@@ -39,6 +41,7 @@ class StorageFacility {
   }
 
   func numberOfItem(_ item: String) -> Int {
+    /// exercise: utilize `filter(_:)` method
     var counter: Int = 0 
     for storedItem in repository {
       if storedItem == item {
@@ -86,7 +89,7 @@ class StorageManager {
         try qa.evaluate(item) {
           itemIsString = $0
         }
-
+        /// better practice: `if let _ = item as? String { ... } 
         if itemIsString {
           // store new item in facility
           try facility.store(item as! String)
@@ -97,7 +100,7 @@ class StorageManager {
           throw error
       }
     }
-
+    // MARK: - todo: update the code below based on changes
     func checkItemExist(_ item: Any?) throws -> Bool {
       if item is String {
         return facility.checkItemExist(item as! String)
@@ -105,7 +108,7 @@ class StorageManager {
         throw StorageError.invalidItemType
       }
     }
-
+    // MARK: - todo: update the code below based on changes
     func getItemCount(_ item: Any?) throws -> Int {
       if item is String {
         return facility.numberOfItem(item as! String)
