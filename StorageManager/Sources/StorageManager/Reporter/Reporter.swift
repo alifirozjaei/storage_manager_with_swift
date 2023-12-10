@@ -8,6 +8,7 @@
 import Foundation
 
 class Reporter {
+	/// `coupling` causes memory leaks. Look into different reference types.
 	private var storage: StorageFacility?
 	
 	init() {
@@ -26,12 +27,14 @@ class Reporter {
 		}
 		return false
 	}
-	
+	/// If a repository is non-existant, it is a better practice to inform clients of a `StorageError`
 	func numberOfItem(_ item: Any) -> Int {
 		guard let repository = self.storage?.getRepository() else {
 			return 0
 		}
-		
+		/// Alternative: `compactMap(_:)`
+		/// https://developer.apple.com/documentation/swift/sequence/compactmap(_:)
+		/// enclose type cast within mapping function
 		if let itemString = item as? String {
 			let filteredItems = repository.filter { $0 == itemString }
 			return filteredItems.count

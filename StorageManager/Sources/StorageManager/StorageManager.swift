@@ -16,14 +16,15 @@ class StorageManager {
 	
 	func store(_ item: Any?) throws {
 		do {
-				// Check if item is a string
+			// Check if item is a string
 			guard let itemString = item as? String else {
 				throw StorageError.invalidItemType
 			}
 			
-				// Store the item in the facility
+			// Store the item in the facility
 			try facility.store(itemString)
 		} catch {
+			/// `store(_:)` method is a throwing function. No need to `catch (let error)` if no further operations are running.
 			throw error
 		}
 	}

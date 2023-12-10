@@ -9,12 +9,14 @@ import Foundation
 
 class StorageFacility {
 	// Create fix size array
+	/// using `private(set)` will allow us to have a `private` `getter` and an `internal` `setter`
 	private var repository: [String?] = [] {
 		willSet {
 			print("Repo Updated: \(newValue)")
 		}
 	}
 	
+	/// This creates a coupling. Search for `coupling` within the code for more information.
 	private var reporter: Reporter
 	
 	init(storage_size: Int, reporter: Reporter) {
