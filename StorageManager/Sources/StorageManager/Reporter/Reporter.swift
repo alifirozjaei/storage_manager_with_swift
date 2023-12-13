@@ -6,10 +6,10 @@
 //
 
 import Foundation
-
+				
 class Reporter {
 	/// `coupling` causes memory leaks. Look into different reference types.
-	private var storage: StorageFacility?
+	weak private var storage: StorageFacility?
 	
 	init() {
 		print("Reporter Instance Created.")
