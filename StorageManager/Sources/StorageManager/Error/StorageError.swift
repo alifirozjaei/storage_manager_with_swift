@@ -8,8 +8,5 @@
 import Foundation
 
 enum StorageError: Error {
-	case emptyItemError
-	case notStringError
-	case storageIsFullError
-	case invalidItemType
+    case StorageIsFull
 }

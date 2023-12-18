@@ -3,29 +3,48 @@
 
 import Foundation
 
-class StorageManager {
-	private let qa: QualityAssuranceDept = QualityAssuranceDept()
-	private var facility: StorageFacility
-	let reporter: Reporter = Reporter()
-	
-	init(storage_size: Int) {
-		facility = StorageFacility(storage_size: storage_size, reporter: reporter)
-		print("Storage Manager Instance Created.")
-		print("----------------------------------------")
-	}
-	
-	func store(_ item: Any?) throws {
-		do {
-			// Check if item is a string
-			guard let itemString = item as? String else {
-				throw StorageError.invalidItemType
-			}
-			
-			// Store the item in the facility
-			try facility.store(itemString)
-		} catch {
-			/// `store(_:)` method is a throwing function. No need to `catch (let error)` if no further operations are running.
-			throw error
-		}
-	}
+struct AnyEqualable: Equatable { }
+
+class StorageManager: Storable {
+    typealias T = AnyEqualable
+    
+    private var facilities: [String: Any] = [:]
+    private let storageSize: Int
+    private let reporter = Reporter()
+    
+    init(storageSize: Int) {
+        self.storageSize = storageSize
+    }
+    
+    func store<T: Equatable>(_ item: T) throws {
+        let typeName = String(describing: type(of: item))
+        
+        if let facility = facilities[typeName] as? StorageFacility<T> {
+            try facility.store(item)
+        } else {
+            let newFacility = StorageFacility<T>(storageSize: self.storageSize)
+            try newFacility.store(item)
+            facilities[typeName] = newFacility
+        }
+    }
+    
+    func itemExist<T: Equatable>(_ item: T) -> Bool {
+        let typeName = String(describing: type(of: item))
+        
+        if let facility = facilities[typeName] as? StorageFacility<T> {
+            return reporter.itemExist(item, in: facility.getRepository())
+        }
+        
+        return false
+    }
+    
+    func numberOfItem<T: Equatable>(_ item: T) -> Int {
+        let typeName = String(describing: type(of: item))
+        
+        if let facility = facilities[typeName] as? StorageFacility<T> {
+            return reporter.numberOfItem(item, in: facility.getRepository())
+        }
+        
+        return 0
+    }
 }
